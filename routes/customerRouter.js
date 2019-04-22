@@ -1,46 +1,79 @@
 const express = require('express');
 const bodyParser = require ('body-parser');
+const mongoose = require('mongoose');
 
+const Customers = require('../models/customers');
 const customerRouter = express.Router();
 
 customerRouter.use(bodyParser.json());
 
 customerRouter.route('/')
-.all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'text/plain');
-    next();
-})
-.get((req, res, next) => {
-    res.end('will send all the customers to you!');
+.get((req,res,next) => {
+    Customers.find({})
+    .then((customers) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(customers);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
 .post((req, res, next) => {
-    res.end('will add the customer: '+ req.body.name + 
-    'with details: ' + req.body.description);
+    Customers.create(req.body)
+    .then((customer) => {
+        console.log('customer Created ', customer);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(customer);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
 .put((req, res, next) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /customers');
 })
 .delete((req, res, next) => {
-    res.end('Deleting all the customers');
+    Customers.remove({})
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(resp);
+    }, (err) => next(err))
+    .catch((err) => next(err));    
 });
 
 customerRouter.route('/:customerId')
-.get((req, res, next) => {
-    res.end('will send details of the customer: ' + req.params.customerId + ' to you!');
+.get((req,res,next) => {
+    Customers.findById(req.params.customerId)
+    .then((customer) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(customer);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
 .post((req, res, next) => {
     res.statusCode = 403;
-    res.end('PUT operation not supported on /customers/' + req.params.customerId);
+    res.end('POST operation not supported on /customers/'+ req.params.customerId);
 })
 .put((req, res, next) => {
-    res.write('Updating the customer: ' + req.params.customerId +'\n');
-    res.end('Will update the customer: ' + req.body.name + 
-        ' with details: ' + req.body.description);
+    Customers.findByIdAndUpdate(req.params.customerId, {
+        $set: req.body
+    }, { new: true })
+    .then((customer) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(customer);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 })
-.delete( (req, res, next) => {
-    res.end('Deleting customer: ' + req.params.customerId);
+.delete((req, res, next) => {
+    Customers.findByIdAndRemove(req.params.customerId)
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.json(resp);
+    }, (err) => next(err))
+    .catch((err) => next(err));
 });
 
 module.exports = customerRouter;
