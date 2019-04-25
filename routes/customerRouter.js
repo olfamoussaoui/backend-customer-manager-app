@@ -2,12 +2,15 @@ const express = require('express');
 const bodyParser = require ('body-parser');
 const mongoose = require('mongoose');
 
+const cors = require('./cors');
+
 const Customers = require('../models/customers');
 const customerRouter = express.Router();
 
 customerRouter.use(bodyParser.json());
 
 customerRouter.route('/')
+
 .get((req,res,next) => {
     Customers.find({})
     .then((customers) => {
